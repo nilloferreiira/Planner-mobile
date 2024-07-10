@@ -4,7 +4,7 @@ export interface TripDetails {
   id: string;
   destination: string;
   starts_at: string;
-  end_at: string;
+  ends_at: string;
   is_confirmed: boolean;
 }
 
@@ -22,22 +22,22 @@ async function getById(id: string) {
   }
 }
 
-async function create({destination, end_at, starts_at, emails_to_invite}: TripCreate) {
+async function create({destination, ends_at, starts_at, emails_to_invite}: TripCreate) {
     try{
         const { data } = await api.post<{tripId: string}>('/trips', {
             destination,
             starts_at,
-            end_at,
+            ends_at,
             emails_to_invite,
             owner_name: "Danillo",
             owner_email: "nilloferreiira@gmail.com",
         })
 
-        return data.tripId
+        return data
     }
     catch(e) {
         throw (e)
     }
 }
 
-export const tripServer = { getById }
+export const tripServer = { getById, create }
