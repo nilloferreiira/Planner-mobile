@@ -8,4 +8,3 @@
 
 # Arquiteturas
  - pattern de composicao
- - 

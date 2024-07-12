@@ -10,7 +10,7 @@ import {
 import { colors } from "@/styles/colors";
 import { Alert, Image, Keyboard, Text, View } from "react-native";
 import { Button } from "@/components/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal } from "@/components/modal";
 import { Calendar } from "@/components/calendar";
 import { calendarUtils, DatesSelected } from "@/utils/calendarUtils";
@@ -21,6 +21,7 @@ import { validateInput } from "@/utils/validateInput";
 import { tripStorage } from "@/storage/trip";
 import { router } from "expo-router";
 import { tripServer } from "@/server/trip-server";
+import { Loading } from "@/components/loading";
 
 enum StepForm {
   TRIP_DETAILS = 1,
@@ -122,6 +123,8 @@ export default function Index() {
   }
 
   //Trip
+  const [isGettingTrip, setIsGettingTrip] = useState<boolean>(true);
+
   async function saveTrip(tripId: string) {
     try {
       await tripStorage.save(tripId);
@@ -139,6 +142,7 @@ export default function Index() {
     try {
       setIsCreatingTrip(true);
 
+      // atualizar as datas usando o dayjs e toString() 
       const newTrip = await tripServer.create({
         destination,
         starts_at: selectedDates.startsAt?.dateString!,
@@ -153,11 +157,38 @@ export default function Index() {
         },
       ]);
     } catch (e) {
-      console.log(e);
       setIsCreatingTrip(false);
+      console.log(e);
     }
   }
 
+  async function getTrip() {
+    try {
+      const tripId = await tripStorage.get();
+
+      if (!tripId) {
+        return setIsGettingTrip(false);
+      }
+
+      const trip = await tripServer.getById(tripId);
+
+      if (trip) {
+        return router.navigate(`/trip/${tripId}`);
+      }
+    } catch (e) {
+      setIsGettingTrip(false);
+      console.log(e);
+    }
+  }
+
+  useEffect(() => {
+    getTrip();
+  }, []);
+
+  if (isGettingTrip) {
+    return <Loading />;
+  }
+  
   return (
     <View className="flex flex-1 items-center justify-center px-5">
       <Image

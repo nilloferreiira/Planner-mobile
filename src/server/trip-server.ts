@@ -8,8 +8,8 @@ export interface TripDetails {
   is_confirmed: boolean;
 }
 
-interface TripCreate extends Omit<TripDetails, 'id' | 'is_confirmed'>{
-    emails_to_invite: string[]
+interface TripCreate extends Omit<TripDetails, "id" | "is_confirmed"> {
+  emails_to_invite: string[];
 }
 
 async function getById(id: string) {
@@ -22,22 +22,43 @@ async function getById(id: string) {
   }
 }
 
-async function create({destination, ends_at, starts_at, emails_to_invite}: TripCreate) {
-    try{
-        const { data } = await api.post<{tripId: string}>('/trips', {
-            destination,
-            starts_at,
-            ends_at,
-            emails_to_invite,
-            owner_name: "Danillo",
-            owner_email: "nilloferreiira@gmail.com",
-        })
+async function create({
+  destination,
+  ends_at,
+  starts_at,
+  emails_to_invite,
+}: TripCreate) {
+  try {
+    const { data } = await api.post<{ tripId: string }>("/trips", {
+      destination,
+      starts_at,
+      ends_at,
+      emails_to_invite,
+      owner_name: "Danillo",
+      owner_email: "nilloferreiira@gmail.com",
+    });
 
-        return data
-    }
-    catch(e) {
-        throw (e)
-    }
+    return data;
+  } catch (e) {
+    throw e;
+  }
 }
 
-export const tripServer = { getById, create }
+async function update({
+  id,
+  destination,
+  ends_at,
+  starts_at,
+}: Omit<TripDetails, "is_confirmed">) {
+  try {
+    await api.put(`/trips/${id}`, {
+      destination,
+      starts_at,
+      ends_at,
+    });
+  } catch (e) {
+    throw e;
+  }
+}
+
+export const tripServer = { getById, create, update };
