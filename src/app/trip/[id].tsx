@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, Keyboard, Alert } from "react-native"
+import { View, Text, TouchableOpacity, Keyboard, Alert } from "react-native"
 import { router, useLocalSearchParams } from "expo-router"
 import { useEffect, useState } from "react"
 import { TripDetails, tripServer } from "@/server/trip-server"
@@ -9,7 +9,9 @@ import {
   Info,
   MapPin,
   Settings2,
-  Calendar as IconCalendar
+  Calendar as IconCalendar,
+  User,
+  Mail
 } from "lucide-react-native"
 import { colors } from "@/styles/colors"
 import dayjs from "dayjs"
@@ -35,6 +37,7 @@ export default function Trip() {
   //Loading
   const [isLoadingTrip, setIsLoadingTrip] = useState(true)
   const [isUpdatingTrip, setIsUpdatingTrip] = useState(false)
+  const [isConfirmAttendance, setIsConfirmAttendace] = useState(false)
   //Modal
   const [showModal, setShowModal] = useState(MODAL.NONE)
 
@@ -42,7 +45,8 @@ export default function Trip() {
   const [tripDetails, setTripDetails] = useState({} as TripData)
   const [option, setOption] = useState<"activity" | "destails">("activity")
   const [destination, setDestinaiton] = useState("")
-
+  const [guestName, setGuestName] = useState("")
+  const [guestEmail, setGuestEmail] = useState("")
   const tripId = useLocalSearchParams<{ id: string }>().id
 
   async function getTripDetails() {
@@ -128,6 +132,16 @@ export default function Trip() {
     })
 
     setSelectedDates(dates)
+  }
+
+  async function handleConfirmAttendance() {
+    try {
+    } catch (error) {
+      console.log(error)
+      Alert.alert("Confirmação", "Não foi possível confirmar!")
+    } finally {
+      setIsConfirmAttendace(false)
+    }
   }
 
   useEffect(() => {
@@ -237,6 +251,48 @@ export default function Trip() {
 
           <Button onPress={() => setShowModal(MODAL.UPDATE_TRIP)}>
             <Button.Title>Confirmar</Button.Title>
+          </Button>
+        </View>
+      </Modal>
+
+      <Modal title="Confirmar presença" visible>
+        <View className="gap-4 mt-4">
+          <Text className="text-zinc-400 font-regular leading-6 my-2">
+            Você foi convidado (a) para participar de uma viagem para{" "}
+            <Text className="text-zinc-100 font-semibold">
+              {tripDetails.destination}
+            </Text>
+            <Text>nas datas de</Text>
+            <Text className="text-zinc-100 font-semibold">
+              {" "}
+              {dayjs(tripDetails.starts_at).date()} a{" "}
+              {dayjs(tripDetails.ends_at).date()} de{" "}
+              {dayjs(tripDetails.ends_at).format("MMMM")}. {"\n\n"}
+            </Text>
+            Para confirmar sua presença na viagem preeencha os dados abaixo:
+          </Text>
+
+          <Input variant="secondary">
+            <User color={colors.zinc[400]} size={20} />
+            <Input.Field
+              placeholder="Seu nome completo"
+              onChangeText={setGuestName}
+            />
+          </Input>
+
+          <Input variant="secondary">
+            <Mail color={colors.zinc[400]} size={20} />
+            <Input.Field
+              placeholder="Seu E-mail"
+              onChangeText={setGuestEmail}
+            />
+          </Input>
+
+          <Button
+            isLoading={isConfirmAttendance}
+            onPress={handleConfirmAttendance}
+          >
+            <Button.Title>Confirmar minha presença</Button.Title>
           </Button>
         </View>
       </Modal>
