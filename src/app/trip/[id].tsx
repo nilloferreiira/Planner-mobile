@@ -1,142 +1,141 @@
-import { View, TouchableOpacity, Keyboard, Alert } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { TripDetails, tripServer } from "@/server/trip-server";
-import { Loading } from "@/components/loading";
-import { Input } from "@/components/input";
+import { View, TouchableOpacity, Keyboard, Alert } from "react-native"
+import { router, useLocalSearchParams } from "expo-router"
+import { useEffect, useState } from "react"
+import { TripDetails, tripServer } from "@/server/trip-server"
+import { Loading } from "@/components/loading"
+import { Input } from "@/components/input"
 import {
   CalendarRange,
   Info,
   MapPin,
   Settings2,
-  Calendar as IconCalendar,
-} from "lucide-react-native";
-import { colors } from "@/styles/colors";
-import dayjs from "dayjs";
-import { Button } from "@/components/button";
-import { Activities } from "./activities";
-import { Details } from "./details";
-import { Modal } from "@/components/modal";
-import { Calendar } from "@/components/calendar";
-import { DateData } from "react-native-calendars";
-import { calendarUtils, DatesSelected } from "@/utils/calendarUtils";
+  Calendar as IconCalendar
+} from "lucide-react-native"
+import { colors } from "@/styles/colors"
+import dayjs from "dayjs"
+import { Button } from "@/components/button"
+import { Activities } from "./activities"
+import { Details } from "./details"
+import { Modal } from "@/components/modal"
+import { Calendar } from "@/components/calendar"
+import { DateData } from "react-native-calendars"
+import { calendarUtils, DatesSelected } from "@/utils/calendarUtils"
 
 export interface TripData extends TripDetails {
-  when: string;
+  when: string
 }
 
 enum MODAL {
   NONE = 0,
   UPDATE_TRIP = 1,
-  CALENDAR = 2,
+  CALENDAR = 2
 }
 
 export default function Trip() {
   //Loading
-  const [isLoadingTrip, setIsLoadingTrip] = useState(true);
-  const [isUpdatingTrip, setIsUpdatingTrip] = useState(false);
+  const [isLoadingTrip, setIsLoadingTrip] = useState(true)
+  const [isUpdatingTrip, setIsUpdatingTrip] = useState(false)
   //Modal
-  const [showModal, setShowModal] = useState(MODAL.NONE);
+  const [showModal, setShowModal] = useState(MODAL.NONE)
 
   //Data
-  const [tripDetails, setTripDetails] = useState({} as TripData);
-  const [option, setOption] = useState<"activity" | "destails">("activity");
-  const [destination, setDestinaiton] = useState("");
+  const [tripDetails, setTripDetails] = useState({} as TripData)
+  const [option, setOption] = useState<"activity" | "destails">("activity")
+  const [destination, setDestinaiton] = useState("")
 
-  const tripId = useLocalSearchParams<{ id: string }>().id;
+  const tripId = useLocalSearchParams<{ id: string }>().id
 
   async function getTripDetails() {
     try {
-      setIsLoadingTrip(true);
+      setIsLoadingTrip(true)
       if (!tripId) {
-        router.back();
+        router.back()
       }
 
-      const trip = await tripServer.getById(tripId!);
+      const trip = await tripServer.getById(tripId!)
 
-      const maxLengthDestination = 14;
+      const maxLengthDestination = 14
       const destination =
         trip.destination.length > maxLengthDestination
           ? trip.destination.slice(0, maxLengthDestination) + "..."
-          : trip.destination;
+          : trip.destination
 
-      const starts_at = dayjs(trip.starts_at).format("DD");
-      const ends_at = dayjs(trip.ends_at).format("DD");
-      const month = dayjs(trip.starts_at).format("MMM");
+      const starts_at = dayjs(trip.starts_at).format("DD")
+      const ends_at = dayjs(trip.ends_at).format("DD")
+      const month = dayjs(trip.starts_at).format("MMM")
 
-      setDestinaiton(trip.destination);
+      setDestinaiton(trip.destination)
 
       setTripDetails({
         ...trip,
-        when: `${destination} de ${starts_at} a ${ends_at} de ${month}.`,
-      });
+        when: `${destination} de ${starts_at} a ${ends_at} de ${month}.`
+      })
 
-      setIsLoadingTrip(false);
+      setIsLoadingTrip(false)
     } catch (e) {
-      setIsLoadingTrip(false);
-      console.log(e);
+      setIsLoadingTrip(false)
+      console.log(e)
     } finally {
-      setIsLoadingTrip(false);
+      setIsLoadingTrip(false)
     }
   }
 
   async function handleUpdateTrip() {
     try {
       if (!tripId) {
-        return;
+        return
       }
 
       if (!destination || !selectedDates.startsAt || !selectedDates.endsAt) {
         return Alert.alert(
           "Atualizar viagem",
           "Lembre-se de, além de preeencher o destino, selecione data de início e fim da viagem."
-        );
+        )
       }
 
-      setIsUpdatingTrip(true);
+      setIsUpdatingTrip(true)
 
       await tripServer.update({
         id: tripId,
         destination,
         starts_at: dayjs(selectedDates.startsAt.dateString!).toString(),
-        ends_at: dayjs(selectedDates.endsAt.dateString!).toString(),
-      });
+        ends_at: dayjs(selectedDates.endsAt.dateString!).toString()
+      })
 
       Alert.alert("Atualizar viagem", "Viagem atualizada com sucesso!", [
         {
           text: "OK",
           onPress: () => {
-            setShowModal(MODAL.NONE),
-            getTripDetails()
-          },
-        },
-      ]);
+            setShowModal(MODAL.NONE), getTripDetails()
+          }
+        }
+      ])
     } catch (e) {
-      console.log(e);
+      console.log(e)
     } finally {
       setIsUpdatingTrip(false)
     }
   }
 
   //Dates
-  const [selectedDates, setSelectedDates] = useState({} as DatesSelected);
+  const [selectedDates, setSelectedDates] = useState({} as DatesSelected)
 
   function handleSelectDate(selectedDay: DateData) {
     const dates = calendarUtils.orderStartsAtAndEndsAt({
       startsAt: selectedDates.startsAt,
       endsAt: selectedDates.endsAt,
-      selectedDay,
-    });
+      selectedDay
+    })
 
-    setSelectedDates(dates);
+    setSelectedDates(dates)
   }
 
   useEffect(() => {
-    getTripDetails();
-  }, []);
+    getTripDetails()
+  }, [])
 
   if (isLoadingTrip) {
-    return <Loading />;
+    return <Loading />
   }
 
   return (
@@ -242,5 +241,5 @@ export default function Trip() {
         </View>
       </Modal>
     </View>
-  );
+  )
 }
