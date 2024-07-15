@@ -255,7 +255,7 @@ export default function Trip() {
         </View>
       </Modal>
 
-      <Modal title="Confirmar presença" visible>
+      <Modal title="Confirmar presença" visible={true}>
         <View className="gap-4 mt-4">
           <Text className="text-zinc-400 font-regular leading-6 my-2">
             Você foi convidado (a) para participar de uma viagem para{" "}
