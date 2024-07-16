@@ -1,46 +1,46 @@
-import { Input } from "@/components/input";
+import { Input } from "@/components/input"
 import {
   ArrowRight,
   AtSign,
   CalendarIcon,
   MapPin,
   Settings2,
-  UserRoundPlus,
-} from "lucide-react-native";
-import { colors } from "@/styles/colors";
-import { Alert, Image, Keyboard, Text, View } from "react-native";
-import { Button } from "@/components/button";
-import { useEffect, useState } from "react";
-import { Modal } from "@/components/modal";
-import { Calendar } from "@/components/calendar";
-import { calendarUtils, DatesSelected } from "@/utils/calendarUtils";
-import { DateData } from "react-native-calendars";
-import dayjs from "dayjs";
-import { GuestEmail } from "@/components/email";
-import { validateInput } from "@/utils/validateInput";
-import { tripStorage } from "@/storage/trip";
-import { router } from "expo-router";
-import { tripServer } from "@/server/trip-server";
-import { Loading } from "@/components/loading";
+  UserRoundPlus
+} from "lucide-react-native"
+import { colors } from "@/styles/colors"
+import { Alert, Image, Keyboard, Text, View } from "react-native"
+import { Button } from "@/components/button"
+import { useEffect, useState } from "react"
+import { Modal } from "@/components/modal"
+import { Calendar } from "@/components/calendar"
+import { calendarUtils, DatesSelected } from "@/utils/calendarUtils"
+import { DateData } from "react-native-calendars"
+import dayjs from "dayjs"
+import { GuestEmail } from "@/components/email"
+import { validateInput } from "@/utils/validateInput"
+import { tripStorage } from "@/storage/trip"
+import { router } from "expo-router"
+import { tripServer } from "@/server/trip-server"
+import { Loading } from "@/components/loading"
 
 enum StepForm {
   TRIP_DETAILS = 1,
-  AT_EMAIL = 2,
+  AT_EMAIL = 2
 }
 
 enum MODAL {
   NONE = 0,
   CALENDAR = 1,
-  GUESTS = 2,
+  GUESTS = 2
 }
 
 export default function Index() {
   //Loading
-  const [isCreatingTrip, setIsCreatingTrip] = useState<boolean>(false);
+  const [isCreatingTrip, setIsCreatingTrip] = useState<boolean>(false)
 
   //Steps
-  const [stepForm, setStepForm] = useState(StepForm.TRIP_DETAILS);
-  const [destination, setDestination] = useState("");
+  const [stepForm, setStepForm] = useState(StepForm.TRIP_DETAILS)
+  const [destination, setDestination] = useState("")
 
   function handleNextStepForm() {
     if (
@@ -51,144 +51,144 @@ export default function Index() {
       return Alert.alert(
         "Detalhes da viagem",
         "Preencha todos as informações da viagem."
-      );
+      )
     }
 
     if (destination.length < 4) {
       return Alert.alert(
         "Detalhes da viagem",
         "O destino deve ter pelo menos 4 caracteres."
-      );
+      )
     }
 
     if (stepForm === StepForm.TRIP_DETAILS) {
-      return setStepForm(StepForm.AT_EMAIL);
+      return setStepForm(StepForm.AT_EMAIL)
     }
 
     Alert.alert("Nova viagem", "Confirmar viagem?", [
       {
         text: "Não",
-        style: "cancel",
+        style: "cancel"
       },
       {
         text: "Sim",
-        onPress: createTrip,
-      },
-    ]);
+        onPress: createTrip
+      }
+    ])
   }
 
   //Modal
-  const [showModal, setShowModal] = useState(MODAL.NONE);
+  const [showModal, setShowModal] = useState(MODAL.NONE)
 
   //Dates
-  const [selectedDates, setSelectedDates] = useState({} as DatesSelected);
+  const [selectedDates, setSelectedDates] = useState({} as DatesSelected)
 
   function handleSelectDate(selectedDay: DateData) {
     const dates = calendarUtils.orderStartsAtAndEndsAt({
       startsAt: selectedDates.startsAt,
       endsAt: selectedDates.endsAt,
-      selectedDay,
-    });
+      selectedDay
+    })
 
-    setSelectedDates(dates);
+    setSelectedDates(dates)
   }
 
   //Guests
-  const [emailToInvite, setEmailToInvite] = useState("");
-  const [emailsToInvite, setEmailsToInvite] = useState<string[]>([]);
+  const [emailToInvite, setEmailToInvite] = useState("")
+  const [emailsToInvite, setEmailsToInvite] = useState<string[]>([])
 
   function handleRemoveEmail(emailToRemove: string) {
     setEmailsToInvite((prevState) =>
       prevState.filter((email) => email !== emailToRemove)
-    );
+    )
   }
 
   function handleAddEmail() {
     if (!validateInput.email(emailToInvite)) {
-      return Alert.alert("Convidado", "E-mail inválido!");
+      return Alert.alert("Convidado", "E-mail inválido!")
     }
 
     const emailAlreadyExists = emailsToInvite.find(
       (email) => email === emailToInvite
-    );
+    )
     if (emailAlreadyExists) {
       return Alert.alert(
         "Convidado",
         "Este e-mail já está na lista de convidados!"
-      );
+      )
     }
 
-    setEmailsToInvite((prevState) => [...prevState, emailToInvite]);
-    setEmailToInvite("");
+    setEmailsToInvite((prevState) => [...prevState, emailToInvite])
+    setEmailToInvite("")
   }
 
   //Trip
-  const [isGettingTrip, setIsGettingTrip] = useState<boolean>(true);
+  const [isGettingTrip, setIsGettingTrip] = useState<boolean>(true)
 
   async function saveTrip(tripId: string) {
     try {
-      await tripStorage.save(tripId);
-      router.navigate(`/trip/${tripId}`);
+      await tripStorage.save(tripId)
+      router.navigate(`/trip/${tripId}`)
     } catch (e) {
       Alert.alert(
         "Salvar Viagem",
         "Não foi possível salvar o id da viagem no dispositivo!"
-      );
-      console.log(e);
+      )
+      console.log(e)
     }
   }
 
   async function createTrip() {
     try {
-      setIsCreatingTrip(true);
+      setIsCreatingTrip(true)
 
-      // atualizar as datas usando o dayjs e toString() 
+      // atualizar as datas usando o dayjs e toString()
       const newTrip = await tripServer.create({
         destination,
         starts_at: selectedDates.startsAt?.dateString!,
         ends_at: selectedDates.endsAt?.dateString!,
-        emails_to_invite: emailsToInvite,
-      });
+        emails_to_invite: emailsToInvite
+      })
 
       Alert.alert("Nova viagem", "Viagem criada com sucesso!", [
         {
           text: "OK. Continuar.",
-          onPress: () => saveTrip(newTrip.tripId),
-        },
-      ]);
+          onPress: () => saveTrip(newTrip.tripId)
+        }
+      ])
     } catch (e) {
-      setIsCreatingTrip(false);
-      console.log(e);
+      setIsCreatingTrip(false)
+      console.log(e)
     }
   }
 
   async function getTrip() {
     try {
-      const tripId = await tripStorage.get();
+      const tripId = await tripStorage.get()
 
       if (!tripId) {
-        return setIsGettingTrip(false);
+        return setIsGettingTrip(false)
       }
 
-      const trip = await tripServer.getById(tripId);
+      const trip = await tripServer.getById(tripId)
 
       if (trip) {
-        return router.navigate(`/trip/${tripId}`);
+        return router.navigate(`/trip/${tripId}`)
       }
     } catch (e) {
-      setIsGettingTrip(false);
-      console.log(e);
+      setIsGettingTrip(false)
+      console.log(e)
     }
   }
 
   useEffect(() => {
-    getTrip();
-  }, []);
+    getTrip()
+  }, [])
 
   if (isGettingTrip) {
-    return <Loading />;
+    return <Loading />
   }
-  
+
   return (
     <View className="flex flex-1 items-center justify-center px-5">
       <Image
@@ -249,8 +249,8 @@ export default function Index() {
                     : ""
                 }
                 onPressIn={() => {
-                  Keyboard.dismiss();
-                  setShowModal(MODAL.GUESTS);
+                  Keyboard.dismiss()
+                  setShowModal(MODAL.GUESTS)
                 }}
                 onFocus={() => Keyboard.dismiss()}
                 showSoftInputOnFocus={false}
@@ -258,7 +258,11 @@ export default function Index() {
             </Input>
           </>
         )}
-        <Button onPress={handleNextStepForm} isLoading={isCreatingTrip}>
+        <Button
+          onPress={handleNextStepForm}
+          isLoading={isCreatingTrip}
+          className="w-full"
+        >
           <Button.Title>
             {stepForm === StepForm.TRIP_DETAILS
               ? "Continuar"
@@ -336,5 +340,5 @@ export default function Index() {
         </View>
       </Modal>
     </View>
-  );
+  )
 }

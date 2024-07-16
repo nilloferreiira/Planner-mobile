@@ -1,5 +1,6 @@
 import { Button } from "@/components/button"
 import { Input } from "@/components/input"
+import { Loading } from "@/components/loading"
 import { Modal } from "@/components/modal"
 import { Participant, ParticipantProps } from "@/components/participant"
 import { TripLink, TripLinkProps } from "@/components/tripLink"
@@ -94,7 +95,9 @@ export function Details({ tripId }: { tripId: string }) {
       </Text>
 
       <View className="gap-6">
-        {links.length > 0 ? (
+        {isGettingtripLinks ? (
+          <Loading />
+        ) : links.length > 0 ? (
           <FlatList
             data={links}
             keyExtractor={(item) => item.id}
